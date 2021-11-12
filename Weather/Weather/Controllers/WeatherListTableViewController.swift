@@ -12,6 +12,7 @@ class WeatherListTableViewController: UITableViewController, AddWeatherDelegate 
     
     private var weatherListViewModel = WeatherListViewModel()
     private var lastUnitSelection: Unit!
+    private var dataSource: TableViewDataSource<WeatherCell, WeatherViewModel>!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -21,30 +22,20 @@ class WeatherListTableViewController: UITableViewController, AddWeatherDelegate 
         if let value = userDefaults.value(forKey: "unit") as? String {
             lastUnitSelection = Unit(rawValue: value)!
         }
+        
+        self.dataSource = TableViewDataSource(cellIdentifier: "WeatherCell", items: self.weatherListViewModel.weatherViewModels) { (cell, vm) in
+            cell.cityNameLabel.text = vm.city
+            cell.temperatureLabel.text = vm.temperature.formatAsDegree()
+        }
+        self.tableView.dataSource = self.dataSource
     }
     
     func addWeatherDidSave(vm: WeatherViewModel) {
         weatherListViewModel.addWeatherViewModel(vm)
+        self.dataSource.updateItems(self.weatherListViewModel.weatherViewModels)
         tableView.reloadData()
     }
         
-    override func numberOfSections(in tableView: UITableView) -> Int {
-        return 1
-    }
-    
-    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return weatherListViewModel.numberOfRows(section)
-    }
-    
-    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "WeatherCell", for: indexPath) as! WeatherCell
-        
-        let vm = weatherListViewModel.modelAt(indexPath.row)
-        cell.configure(vm)
-        
-        return cell
-    }
-    
     override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 100.0
     }
